@@ -2,7 +2,9 @@
 
 <a rel="license" href="http://creativecommons.org/licenses/by-nc/4.0/"><img alt="Creative Commons Lizenzvertrag" style="border-width:0" src="https://i.creativecommons.org/l/by-nc/4.0/80x15.png" /></a>
 
-This repository gives access to the tools to train the models presented at the BCN 20000's dataset scientific publication. The dataset itself is available for download at the [ISIC archive](https://www.isic-archive.com/#!/topWithHeader/onlyHeaderTop/gallery?filter=%5B%22meta.datasetId%7CBCN_20000%22%5D).
+This repository gives access to the tools to train the models presented at the BCN 20000's dataset scientific publication. The dataset itself is available for download at [FigShare](https://figshare.com/articles/journal_contribution/BCN20000_Dermoscopic_Lesions_in_the_Wild/24140028/1).
+
+![Diagram of dataset formation](https://github.com/imatge-upc/BCN20000/blob/main/Final_diagram.png)
 
 <hr>
 
