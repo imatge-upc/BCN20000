@@ -7,13 +7,13 @@ from torchvision import transforms
 from sklearn.metrics import balanced_accuracy_score
 
 
-def obtain_transform(settings : dict):
-    if 'eff' in settings['model_name']:
-        if 'b0' in settings['model_name']:
+def obtain_transform(args : dict):
+    if 'eff' in args.model_name:
+        if 'b0' in args.model_name:
             size = 224
-        elif 'b1' in settings['model_name']:
+        elif 'b1' in args.model_name:
             size = 240
-        elif 'b2' in settings['model_name']:
+        elif 'b2' in args.model_name:
             size = 260
     else:
         size = 224
