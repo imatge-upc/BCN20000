@@ -1,5 +1,9 @@
 #import yaml
 import argparse
+import random
+import numpy as np
+import torch
+
 from argparse import ArgumentParser
 
 from torch import nn
@@ -10,8 +14,31 @@ from preparation.datasets import BCN20k_Dataset
 from processing.train import train
 from processing.utils import obtain_transform
 
+
 separator = '-'*40
 args_path = 'utils/settings.yaml'
+
+
+
+def set_seeds(seed=42):
+    """Set seeds for reproducibility."""
+    random.seed(seed)       # Python's built-in random library
+    np.random.seed(seed)    # NumPy library
+    torch.manual_seed(seed) # PyTorch
+
+    # If using CUDA (PyTorch with GPU)
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed(seed)
+        torch.cuda.manual_seed_all(seed)  # if using multi-GPU
+        # Below ensures that CUDA operations are deterministic (may impact performance)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+
+# Make sure that seeds are set prior to any other operations
+set_seeds(42)
+
+
+
 
 def train_main(args):
 
@@ -54,6 +81,8 @@ def train_main(args):
 def obtain_datasets(split, data_transform, args):
     df_train = split[0]
     df_val = split[1]
+    df_test = split[2]
+
     train_transform = data_transform['train']
     val_transform   = data_transform['val']
 
@@ -63,7 +92,10 @@ def obtain_datasets(split, data_transform, args):
     dataset_val = BCN20k_Dataset(
         df_val, args, transform=val_transform)
 
-    datasets = (dataset_train, dataset_val)
+    dataset_test = BCN20k_Dataset(
+        df_test, args, transform=val_transform)
+
+    datasets = (dataset_train, dataset_val, dataset_test)
     return datasets
 
 def choose_model(args : argparse.ArgumentParser, num_classes : int=2) -> nn.Module:
@@ -84,7 +116,7 @@ if __name__== "__main__":
 
     argparser = argparse.ArgumentParser(description='Train the model')
     argparser.add_argument('--train_csv', type=str, help='Path to the csv path', default='./bcn_20k_train.csv')
-    argparser.add_argument('--data_dir', type=str, help='Path to the data', default='/home/carlos.hernandez/datasets/images/BCN_20k/new_train/')
+    argparser.add_argument('--data_dir', type=str, help='Path to the data', default='/home/carlos.hernandez/datasets/images/BCN_20k_/new_train/')
     argparser.add_argument('--model_name', type=str, help='Model name', default='effb0', choices=['effb0', 'effb1', 'effb2', 'res18', 'res34', 'res50'])
     # add learning rate and weight decay
     argparser.add_argument('--learning_rate', type=float, help='Learning rate', default=0.00030)

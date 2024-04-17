@@ -43,13 +43,13 @@ def create_stratified_splits(df: pd.DataFrame, n_splits: int = 5, train_size: fl
     # Get a list of random states for each fold
     random_states = get_states(random_state, 2, 28347, size=n_splits)
     
-    id_list = df['lesion_id'].unique()
+    id_list = df['lesion_id']
     splits = []
     # Stratified Kfold for binary classification using ids and labels
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_states[0])
     
     i = 0
-    for train_index, test_index in skf.split(id_list, df.groupby('lesion_id').first()['label']):
+    for train_index, test_index in skf.split(id_list, df['label']):
         train_ids = id_list[train_index]
         test_ids = id_list[test_index]
         

@@ -26,6 +26,7 @@ def obtain_dataloaders(datasets : list , batch_sizes : Tuple, args : dict):
     # Separate datasets from tuple
     dataset_train = datasets[0]
     dataset_val = datasets[1]
+    dataset_test = datasets[2]
 
     # Separate batch sizes from tuple
     batch_size_train = batch_sizes[0]
@@ -47,7 +48,10 @@ def obtain_dataloaders(datasets : list , batch_sizes : Tuple, args : dict):
     loader_val = DataLoader(
         dataset_val, batch_size=batch_size_test, num_workers=32, shuffle=False, drop_last=False)
 
-    return {'train': loader_train, 'val': loader_val}
+    loader_test = DataLoader(
+        dataset_test, batch_size=batch_size_test, num_workers=32, shuffle=False, drop_last=False)
+
+    return {'train': loader_train, 'val': loader_val, 'test': loader_test}
 
 def obtain_training_tools(model : torch.nn.Module , args : dict):
     loss_fn = nn.CrossEntropyLoss()
