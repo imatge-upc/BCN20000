@@ -92,7 +92,8 @@ def supervised_training(dataloaders, model, device, train_tools, args, num_epoch
             'Validation Accuracy': val_metric,
             'Train Loss': train_loss,
             'Validation Loss': val_loss,
-            'Epoch': epoch
+            'Epoch': epoch,
+            'Learning Rate': optimizer.param_groups[0]['lr']
         })
 
         if val_metric > best_metric:
