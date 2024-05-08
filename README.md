@@ -8,13 +8,11 @@ This repository gives access to the tools to train the models presented at the B
 
 <hr>
 
-This repository includes a Python script that generates a master split file for the BCN_20K dataset. The master split file provides a reproducible way to split the dataset into training, validation, and testing sets across multiple folds.
-
 # Generating the Master Split File for the BCN_20K Dataset
 
 This repository includes a Python script that generates a master split file for the BCN_20K dataset. The master split file provides a reproducible way to split the dataset into training, validation, and testing sets across multiple folds.
 
-To generate the master split file, run the script from the command line by providing the path to your input CSV file and the desired output path for the master split CSV file.
+The master split file used to obtain the publication results can be found on this repo. If the user wants to generate again, it can run the script from the command line by providing the path to your input CSV file and the desired output path for the master split CSV file.
 
 ```bash
 python create_master_split.py path/to/bcn_20k_train.csv path/to/output/master_split_file.csv
@@ -28,7 +26,7 @@ First, clone the repository and install the required dependencies:
 git clone https://github.com/your-repository-url.git
 cd your-repository-directory
 pip install -r requirements.txt
-
+```
 
 ## Cropping
 
