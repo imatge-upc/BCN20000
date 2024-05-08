@@ -67,8 +67,7 @@ def supervised_training(dataloaders, model, device, train_tools, args, num_epoch
     val_loss   = AverageMeter()
     best_metric = 0
     patience    = 0
-    # See how to store these together, try using a dictionary!
-
+    
     # Create a config dict which is the args plus the split
     config_dict = args
     config_dict.split = split[-1]
