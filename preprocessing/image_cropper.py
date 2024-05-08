@@ -101,8 +101,8 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser(description='Configuration for dermatoscopy cropping')
     parser.add_argument('--csv_dir', type=str, default=None, required=True,
                         help='Path for the csv with the file locations')
-    parser.add_argument('--data_dir', type=str, help='Path to the data', default='/home/carlos.hernandez/datasets/images/BCN_20k_/new_train/')
-    parser.add_argument('--destination_dir', type=str, help='Path where the new data will be saved', default='/home/carlos.hernandez/datasets/images/BCN_20k_/new_train_cropped/')
+    parser.add_argument('--data_dir', type=str, help='Path to the data', required=True)
+    parser.add_argument('--destination_dir', type=str, help='Path where the new data will be saved', required=True)
     args = parser.parse_args()
    
     df = pd.read_csv(args.csv_dir)
