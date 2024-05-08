@@ -87,6 +87,8 @@ def crop_files(df : pd.DataFrame):
             int_ratio = intensity_ratio(gray_image, x, y, w, h)
 
             if float(int_ratio) > 1.1:
+                # Take the base name of the file and add the destinatio directory
+                filename = df['destination_dir'].iloc[i]
                 print('resaving {}'.format(filename))
                 img = img[y:y+h, x:x+w]
                 cv2.imwrite(filename, img)
@@ -99,9 +101,13 @@ if __name__=='__main__':
     parser = argparse.ArgumentParser(description='Configuration for dermatoscopy cropping')
     parser.add_argument('--csv_dir', type=str, default=None, required=True,
                         help='Path for the csv with the file locations')
+    parser.add_argument('--data_dir', type=str, help='Path to the data', default='/home/carlos.hernandez/datasets/images/BCN_20k_/new_train/')
+    parser.add_argument('--destination_dir', type=str, help='Path where the new data will be saved', default='/home/carlos.hernandez/datasets/images/BCN_20k_/new_train_cropped/')
     args = parser.parse_args()
    
     df = pd.read_csv(args.csv_dir)
+    df['filename'] = df['bcn_filename'].apply(lambda x: args.data_dir+x)
+    df['destination_dir'] = df['bcn_filename'].apply(lambda x: args.destination_dir+x)
     crop_files(df)
 
 

@@ -1,47 +1,45 @@
 import torch
 import torch.nn as nn
 import torchvision.models as models
-from efficientnet_pytorch import EfficientNet
 
 class CEEffNet(nn.Module):
     """encoder + classifier"""
-    def __init__(self, num_classes=2, model_name='effb0'):
+    def __init__(self, num_classes=2, model_name='effb0', dropout=0.4):
         super(CEEffNet, self).__init__()
 
         self.encoder = choose_model(model_name=model_name)
-        dim_in = self.encoder._fc.in_features
-        self.encoder._fc = nn.Identity()
+        dim_in = self.encoder.classifier[1].in_features
+        self.encoder.classifier[1] = nn.Identity()
         self.fc = nn.Sequential(
-                nn.Dropout(p=0.4),
+                nn.Dropout(p=dropout),
                 nn.Linear(dim_in, int(dim_in/2)),
                 Swish_Module(),
-                nn.Dropout(p=0.4),
+                nn.Dropout(p=dropout),
                 nn.Linear(int(dim_in/2), num_classes))
 
     def forward(self, x):
         feat = self.encoder(x)
-        
         return self.fc(feat)
 
 
 class CEResNet(nn.Module):
     """encoder + classifier"""
-    def __init__(self, num_classes=2, model_name='resnet50'):
+    def __init__(self, num_classes=2, model_name='res50', dropout=0.4):
         super(CEResNet, self).__init__()
         self.encoder = choose_model(model_name=model_name)
         dim_in = self.encoder.fc.in_features
 
         self.encoder.fc = nn.Identity()
         self.fc = nn.Sequential(
-                nn.Dropout(p=0.4),
+                nn.Dropout(p=dropout),
                 nn.Linear(dim_in, int(dim_in/2)),
                 nn.ReLU(inplace=True),
-                nn.Dropout(p=0.4),
+                nn.Dropout(p=dropout),
                 nn.Linear(int(dim_in/2), num_classes))
 
     def forward(self, x):
         feat = self.encoder(x)
-        return self.fc(self.encoder(x))
+        return self.fc(feat)
 
 def choose_model(model_name : str) -> nn.Module:
     if 'res' in model_name:
@@ -56,11 +54,11 @@ def choose_model(model_name : str) -> nn.Module:
 
     elif 'eff' in model_name:
         if 'b0' in model_name:
-            feature_extractor = EfficientNet.from_pretrained('efficientnet-b0', num_classes=2)
+            feature_extractor = models.efficientnet_b0(pretrained=True)
         elif 'b1' in model_name:
-            feature_extractor = EfficientNet.from_pretrained('efficientnet-b1', num_classes=2)
+            feature_extractor = models.efficientnet_b1(pretrained=True)
         elif 'b2' in model_name:
-            feature_extractor = EfficientNet.from_pretrained('efficientnet-b2', num_classes=2)
+            feature_extractor = models.efficientnet_b2(pretrained=True)
         else:
             raise NotImplementedError("The feature extractor cannot be instantiated: model asked -> {} does not exist".format(model_name))
     else:
