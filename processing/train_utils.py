@@ -5,8 +5,8 @@ from tqdm import tqdm
 
 from processing.utils import acc_class as balanced_acc
 from processing.utils import AverageMeter
-
 import wandb
+
 def train_epoch(model, dataloader, loss_fn, optimizer, device):
     model.train()  # Set model to training mode
     train_loss = AverageMeter()
@@ -62,24 +62,22 @@ def supervised_training(dataloaders, model, device, train_tools, args, num_epoch
 
     loss_fn   = train_tools[0].cuda()
     optimizer = train_tools[1]
-    scheduler = train_tools[2]
 
     train_loss = AverageMeter()
     val_loss   = AverageMeter()
     best_metric = 0
     patience    = 0
-    least_loss  = 0
     # See how to store these together, try using a dictionary!
 
     # Create a config dict which is the args plus the split
     config_dict = args
     config_dict.split = split[-1]
-    # Comment out the following line to use wandb
-    # TODO comment this before sending back the reviews
-    wandb.init(name = f'{args.model_name.upper()} split {split[-1]}', project="BCN 20000 paper", config=config_dict, reinit=True)
+
+    # Comment out the following line to use wandb for logging
+    #wandb.init(name = f'{args.model_name.upper()} split {split[-1]}', project="BCN 20000", config=config_dict, reinit=True)
 
     for epoch in range(num_epochs):
-        print(f'\n{"-"*40}\nTraining epoch {epoch}\n{"-"*40}')
+        print(f'\n{"-"*40}\nTraining epoch {epoch} for model {args.model_name}\n{"-"*40}')
 
         train_loss, train_preds, train_gts = train_epoch(model, dataloaders['train'], loss_fn, optimizer, device)
         val_loss, val_preds, val_gts = validation_epoch(model, dataloaders['val'], loss_fn, device)
@@ -87,18 +85,19 @@ def supervised_training(dataloaders, model, device, train_tools, args, num_epoch
         train_metric = balanced_acc(train_gts, train_preds)
         val_metric = balanced_acc(val_gts, val_preds)
 
-        wandb.log({
-            'Train Accuracy': train_metric,
-            'Validation Accuracy': val_metric,
-            'Train Loss': train_loss,
-            'Validation Loss': val_loss,
-            'Epoch': epoch,
-            'Learning Rate': optimizer.param_groups[0]['lr']
-        })
+       #wandb.log({
+       #    'Train Bal Accuracy': train_metric,
+       #    'Validation Bal Accuracy': val_metric,
+       #    'Train Loss': train_loss,
+       #    'Validation Loss': val_loss,
+       #    'Epoch': epoch,
+       #    'Learning Rate': optimizer.param_groups[0]['lr']
+       #})
 
         if val_metric > best_metric:
             best_metric = val_metric
-            wandb.log({"Best Validation Accuracy": best_metric})
+            # Uncomment the following line to log the best validation accuracy
+           #wandb.log({"Best Validation Bal Accuracy": best_metric})
             update_best_model(val_metric, model, split, train_metric)
             patience = 0
 
@@ -106,26 +105,26 @@ def supervised_training(dataloaders, model, device, train_tools, args, num_epoch
             _, test_preds, test_gts = validation_epoch(model, dataloaders['test'], loss_fn, device)
             test_metric = balanced_acc(test_gts, test_preds)
             print(f'Test accuracy: {test_metric}')
-            wandb.log({'Test Accuracy': test_metric})
+            # Uncomment the following line to log the test accuracy
+           #wandb.log({'Test Bal Accuracy': test_metric})
 
-            if val_loss < least_loss:
-                least_loss = val_loss
-            else:
-                patience += 1
+        else:
+            # Print a counter of how many times the patience has been triggered
+            print(f'Patience triggered {patience} times of {args.patience}')
+            patience += 1
 
-            if patience >= 50:
-                print("Early stopping triggered")
-                break
+        if patience >= args.patience:
+            print("Early stopping triggered")
+            break
 
-            scheduler.step()
 
         print('='*41)
-        print('Train acc : {} ---------- Val acc : {} \nTrain loss {} ---------- Val loss {}'.format(
+        print('Model :\nTrain acc : {} ---------- Val acc : {} \nTrain loss {} ---------- Val loss {}'.format(
             round(train_metric, 3), round(val_metric, 3), round(train_loss, 4), round(val_loss, 4)))
         print('='*41)
         
     # Optionally finish the wandb run
-    wandb.finish()
+   #wandb.finish()
 
 def update_best_model(acc_val, model, split, acc_train, classifier=None):
     if not os.path.exists('saved_models/'):

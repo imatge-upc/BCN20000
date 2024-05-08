@@ -15,12 +15,12 @@ def train(model : torch.nn.Module, datasets : list, split : str, args : dict, ba
     # Dataloaders
     dataloaders = obtain_dataloaders(datasets, batch_sizes, args)
 
-    # Loss function, optimizer and scheduler
-    loss_fn, optimizer, scheduler = obtain_training_tools(model, args)
-    train_tools = [loss_fn, optimizer, scheduler]
+    # Loss function, optimizer
+    loss_fn, optimizer = obtain_training_tools(model, args)
+    train_tools = [loss_fn, optimizer]
      
     supervised_training(dataloaders, model, device, train_tools,
-                    args, num_epochs=250, split=split)
+                    args, num_epochs=130, split=split)
 
 def obtain_dataloaders(datasets : list , batch_sizes : Tuple, args : dict):
     # Separate datasets from tuple
@@ -58,6 +58,4 @@ def obtain_training_tools(model : torch.nn.Module , args : dict):
     print('We are using {} as loss function'.format(loss_fn))
     optimizer = Adam(model.parameters(),
                     lr=args.learning_rate, weight_decay=args.weight_decay)
-    scheduler = lr_scheduler.CosineAnnealingWarmRestarts(
-       optimizer, 20, T_mult=1)
-    return loss_fn, optimizer, scheduler
+    return loss_fn, optimizer

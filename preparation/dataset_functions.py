@@ -21,8 +21,8 @@ def get_data(args : ArgumentParser) -> pd.DataFrame:
     df = df[['filename', 'label', 'lesion_id']]
     return df
 
-def create_stratified_splits(df: pd.DataFrame, n_splits: int = 5, train_size: float = 0.6, 
-                             val_size: float = 0.1, test_size: float = 0.3, random_state: int = 42) -> List[Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]]:
+def create_stratified_splits(df: pd.DataFrame, n_splits: int = 5, train_size: float = 0.75, 
+                             val_size: float = 0.05, random_state: int = 42) -> List[Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]]:
     """
     Splits a DataFrame into stratified training, validation, and testing datasets across specified number of folds.
     Each split ensures that the proportion of categories in the original data is preserved as much as possible
@@ -43,25 +43,23 @@ def create_stratified_splits(df: pd.DataFrame, n_splits: int = 5, train_size: fl
     # Get a list of random states for each fold
     random_states = get_states(random_state, 2, 28347, size=n_splits)
     
-    id_list = df['lesion_id']
+    id_list = df['lesion_id'].unique()
     splits = []
     # Stratified Kfold for binary classification using ids and labels
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_states[0])
     
-    i = 0
-    for train_index, test_index in skf.split(id_list, df['label']):
+    for i, (train_index, test_index) in enumerate(skf.split(id_list, df.groupby('lesion_id').first()['label'])):
         train_ids = id_list[train_index]
         test_ids = id_list[test_index]
-        
+        # Select training and test DataFrames
         train_df = df[df['lesion_id'].isin(train_ids)]
         test_df = df[df['lesion_id'].isin(test_ids)]
         
-        # Proper splitting of the test set into validation and test using a new random state
-        val_df, test_df = train_test_split(test_df, test_size=test_size/(test_size + val_size), 
-                                           stratify=test_df['label'], random_state=random_states[i])
+        # Split the original training set to create a smaller training set and a validation set
+        train_df, val_df = train_test_split(train_df, test_size=val_size/(train_size+val_size), 
+                                            stratify=train_df['label'], random_state=random_states[i])
         
         splits.append((train_df, val_df, test_df))
-        i += 1
 
     return splits
 
@@ -102,8 +100,7 @@ def load_splits_from_file(args : ArgumentParser) -> List[Tuple[pd.DataFrame, pd.
     return splits
 
 def create_stratified_splits_master_file(df: pd.DataFrame, n_splits: int = 5, train_size: float = 0.75, 
-                                         val_size: float = 0.1, test_size: float = 0.15, 
-                                         random_state: int = 42) -> pd.DataFrame:
+                       val_size: float = 0.05, random_state: int = 42) -> pd.DataFrame:
     """
     Creates a master file DataFrame with expanded rows representing multiple fold splits of the dataset.
     Each image appears in multiple folds with designated roles (train, validation, test) based on stratified sampling.
@@ -120,40 +117,37 @@ def create_stratified_splits_master_file(df: pd.DataFrame, n_splits: int = 5, tr
     - pd.DataFrame: A master DataFrame with additional 'split_type' and 'fold_number' columns indicating
                     the split type (train, validation, test) and the fold number for each row.
     """
-        # Get a list of random states for each fold
+    # Initialize random states for each fold
     random_states = get_states(random_state, 2, 28347, size=n_splits + 1)
-    
+
     id_list = df['lesion_id'].unique()
     master_list = []  # List to hold the expanded DataFrame rows
-    
-    # Stratified Kfold for binary classification using ids and labels
+
     skf = StratifiedKFold(n_splits=n_splits, shuffle=True, random_state=random_states[0])
-    
-    fold = 1
-    for train_index, test_index in skf.split(id_list, df.groupby('lesion_id').first()['diagnosis']):
+
+    for i, (train_index, test_index) in enumerate(skf.split(id_list, df.groupby('lesion_id').first()['diagnosis'])):
         train_ids = id_list[train_index]
         test_ids = id_list[test_index]
-        
-        # Create copies of the DataFrame for each fold and update 'split_type' and 'fold_number'
+
         fold_df = df.copy()
         fold_df['split_type'] = None
-        fold_df['fold_number'] = fold
-        
+        fold_df['fold_number'] = i + 1  # Start fold numbering at 1
+
+        # Select and label the train, validation, and test data
         train_df = fold_df[fold_df['lesion_id'].isin(train_ids)]
         test_df = fold_df[fold_df['lesion_id'].isin(test_ids)]
+
+        # Further split the train data into new train and validation sets
+        train_df, val_df = train_test_split(train_df, test_size=val_size/(train_size+val_size), 
+                                            stratify=train_df['diagnosis'], random_state=random_states[i + 1])
         
-        val_df, test_df = train_test_split(test_df, test_size=test_size/(test_size + val_size), 
-                                           stratify=test_df['diagnosis'], random_state=random_states[fold])
-        
+        # Assign split types
         fold_df.loc[train_df.index, 'split_type'] = 'train'
         fold_df.loc[val_df.index, 'split_type'] = 'validation'
         fold_df.loc[test_df.index, 'split_type'] = 'test'
-        
         # Append the modified DataFrame to the master list
         master_list.append(fold_df)
-        
-        fold += 1
-    
+
     # Concatenate all fold DataFrames into one master DataFrame
     master_df = pd.concat(master_list, ignore_index=True)
     return master_df

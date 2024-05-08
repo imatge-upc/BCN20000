@@ -21,8 +21,7 @@ class BCN20k_Dataset(Dataset):
         row = self.df.iloc[idx]
     
         try:
-            sample = Image.open(row["filename"])
-            sample = sample.convert('RGB')
+            sample = Image.open(row["filename"]).convert("RGB")
             
             # Transform if there are any transformations to do
             if self.transform:
