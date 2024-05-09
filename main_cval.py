@@ -166,8 +166,8 @@ def get_hyperparameters(model_name):
 if __name__== "__main__":
 
     parser = argparse.ArgumentParser(description='Train the model')
-    parser.add_argument('--train_csv', type=str, help='Path to the csv path', required=True)
-    parser.add_argument('--data_dir', type=str, help='Path to the images', required=True)
+    parser.add_argument('--train_csv', type=str, help='Path to the csv path')
+    parser.add_argument('--data_dir', type=str, help='Path to the images')
 
     parser.add_argument('--model_name', type=str, help='Model name', default='effb1', choices=['effb0', 'effb1', 'effb2', 'res18', 'res34', 'res50', 'all'])
     # add patience
